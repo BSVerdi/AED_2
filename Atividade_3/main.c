@@ -13,25 +13,52 @@ int *copiarArray(int *array, int size) {
 }
 
 
-void swap(int *array, int index_a, int index_b) {
-    int temp = array[index_b];
+void swap(int *num_1, int *num_2) {
+    int temp = *num_1;
 
-    array[index_b] = array[index_a];
-    array[index_a] = temp;
+    (*num_1) = (*num_2);
+    (*num_2) = temp;
 }
 
 
-int mediana(int *array, int index_1, int index_2, int index_3) {
-    int value_1 = array[index_1];
-    int value_2 = array[index_2];
-    int value_3 = array[index_3];
+int mediana(int *array, int start, int end, int *comparacoes) {
+    int mid = start + (end - start) / 2;
 
-    if ((value_1 >= value_2 && value_1 <= value_3) || (value_1 <= value_2 && value_1 >= value_3))
-        return index_1;
-    else if ((value_2 >= value_1 && value_2 <= value_3) || (value_2 <= value_1 && value_2 >= value_3))
-        return index_2;
+    int a = array[start];
+    int b = array[mid];
+    int c = array[end];
+    
+    (*comparacoes) += 3; // conta a comparação entre 3 valores
+
+    if ((a > b && a < c) || (a > c && a < b))
+        return start;
+    else if ((b > a && b < c) || (b > c && b < a))
+        return mid;
     else
-        return index_3;
+        return end;
+}
+
+
+void insertionSort(int *array, int start, int end, int *comparacoes) {
+
+    for (int i = start + 1; i <= end; i++) {
+        int key = array[i];
+        int j = i - 1;
+
+        // em cada ciclo há uma comparacao
+        while (j >= start && array[j] > key) {
+            array[j + 1] = array[j];
+
+            (*comparacoes)++;
+            j--;
+        }
+        
+        // conta quando a comparacao no while é falsa
+        if (j >= start) (*comparacoes)++;
+
+        if (j + 1 != i)
+            array[j + 1] = key;
+    }
 }
 
 
@@ -80,24 +107,24 @@ void mergeSort(int *array, int start, int end, int *comparacoes) {
 
 
 int particionar(int *array, int start, int end, int *comparacoes) {
-    int mid = start + (end - start) / 2;
-
-    int index_pivo = mediana(array, start, mid, end);
-    swap(array, index_pivo, end);
+    int index_pivo = mediana(array, start, end, comparacoes);
+    swap(&array[index_pivo], &array[end]);
     int pivo = array[end];
+
+    // move o pivo para o final do array
 
     int i = start - 1;
 
     for (int j = start; j < end; j++) {
-        if (array[j] < pivo) {
-            i++;
-            swap(array, i, j);
-        }
         (*comparacoes)++;
+
+        if (array[j] <= pivo) {
+            i++;
+            swap(&array[i], &array[j]);
+        }
     }
 
-    swap(array, i + 1, end);
-
+    swap(&array[i + 1], &array[end]);
     return i + 1;
 }
 
@@ -111,6 +138,21 @@ void quickSort(int *array, int start, int end, int *comparacoes) {
     }
 }
 
+
+void hybridQuickSort(int *array, int start, int end, int *comparacoes) {
+    if (start < end) {
+        // verifica se o array tem tamanho menor ou igual a 5
+        if ((end - start + 1) <= 5)
+            // passa o subarray correto (array[start] = array + start)
+            insertionSort(array, start, end, comparacoes);
+        else {
+            int pivo = particionar(array, start, end ,comparacoes);
+    
+            hybridQuickSort(array, start, pivo - 1, comparacoes);
+            hybridQuickSort(array, pivo + 1, end, comparacoes);
+        }
+    }
+}
 
 
 void printArray(int *array, int size) {
@@ -131,16 +173,39 @@ int main() {
     for (int i = 0; i < size; i++)
         scanf("%d", &array[i]);
 
+    // faz uma cópia do array para o mergeSort
     int *array_copia = copiarArray(array, size);
     
-    //mergeSort(array_copia, 0, (size - 1), &comparacoes);
-    quickSort(array_copia, 0, (size - 1), &comparacoes);
+    mergeSort(array_copia, 0, (size - 1), &comparacoes);
+    
+    // imprime os resultados
+    printArray(array_copia, size);
+    printf("%d\n", comparacoes);
+    
+    free(array_copia); // libera a memoria alocada para a cópia
+    
+    // faz uma cópia do array para o quickSort
+    array_copia = copiarArray(array, size);
+    comparacoes = 0; // restaura o numero de comparações iniciais.
 
+    quickSort(array_copia, 0, (size - 1), &comparacoes);
+    
     printArray(array_copia, size);
     printf("%d\n", comparacoes);
 
     free(array_copia);
-    free(array);
+
+    array_copia = copiarArray(array, size);
+    comparacoes = 0; 
+
+    hybridQuickSort(array_copia, 0, (size - 1), &comparacoes);
+    
+    printArray(array_copia, size);
+    printf("%d\n", comparacoes);
+
+    free(array_copia);
+
+    free(array); // libera o array principal
 
     return 0;
 }
