@@ -1,3 +1,13 @@
+/*
+    Atividade: Algoritmos de Ordenação Quadráticos
+    Data: 12/5/2025 - UNIFESP
+
+    Algoritmos implementados:
+    - MergeSort
+    - QuickSort
+    - QuickSort híbrido
+
+*/
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
