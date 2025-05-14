@@ -58,23 +58,16 @@ Celula *push(Celula *pilha, char *string, int size) {
 
 
 Celula *pop(Celula *pilha, char **string, int size) {
-    Celula *lixo = (Celula*)malloc(sizeof(Celula));
+    if (pilha == NULL)
+        return pilha;
 
-    lixo = pilha;
+    Celula *lixo = pilha;
+
     (*string) = copiarString(lixo->string, size);
-
     pilha = lixo->seg;
     free(lixo);
 
     return pilha;
-}
-
-
-void printPilha(Celula *pilha) {
-    printf("Pilha: ");
-    for (Celula *temp = pilha; temp != NULL; temp = temp->seg)
-        printf("%s ", temp->string);
-    printf("\n");
 }
 
 
@@ -91,16 +84,12 @@ int main() {
         scanf("%s", string);
         
         size = stringSize(string);
-        if (i == 0) 
-        maior = size;
-        else if (size > maior)
-        maior = size;
+        if (i == 0 || size > maior) 
+            maior = size;
         
         MaiusculaParaMinuscula(string);
         
         pilha = push(pilha, string, size);
-        
-        puts(pilha->string);
     }
 
     array = (Array*)malloc(sizeof(Array) * palavras);
