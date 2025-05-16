@@ -1,17 +1,37 @@
+/*
+    Atividade: Algoritmos de Ordenação Quadráticos
+    Data: 16/5/2025 - UNIFESP
+
+    Algoritmos implementados:
+    - Counting Sort
+    - Radix Sort
+*/
 #include<stdio.h>
 #include<stdlib.h>
 
+// funcao para converter a letra em um indice para o "index"
+int hash(char letra) {
+    if (letra == 32) return 0;
 
-typedef struct {
-    char *string;
-    struct Celula *seg;
-} Celula;
+    return ((letra - 97) % 26) + 1;
+}
 
+int *lerSequencia() {
+    int *index = (int*)malloc(sizeof(int) * 27);
+    int aux;
+    char temp[26];
 
-typedef struct {
-    char *string;
-    int str_size;
-} Array;
+    scanf("%s", temp);
+
+    // cada posição no index recebe o index da letra na sequencia para ser usado no vetor C
+    index[0] = 0;
+    for (int i = 1; i < 27; i++) {
+        aux = hash(temp[i - 1]);
+        index[aux] = i;
+    }
+
+    return index;
+}
 
 
 void MaiusculaParaMinuscula(char *string) {
@@ -46,59 +66,91 @@ int stringSize(char *string) {
     return size;
 }
 
+void countingSort(int *index, char **words, int palavras, int coluna) {
+    int c[27], k;
+    char **ordenado = (char**)malloc(sizeof(char*) * palavras);
 
-Celula *push(Celula *pilha, char *string, int size) {
-    Celula *nova = (Celula*)malloc(sizeof(Celula));
+    for(int i = 0; i < 27; i++)
+        c[i] = 0;
+    
+    for (int i = 0; i < palavras; i++) {
+        k = hash(words[i][coluna]);
+        c[index[k]]++;
+    }
 
-    nova->string = copiarString(string, size);  
-    nova->seg = pilha;
+    for (int i = 1; i < 27; i++)
+        c[i] += c[i - 1];
 
-    return nova;
+    // impressao do vetor C
+    for (int i = 0; i < 27; i++)
+        printf("%d ", c[i]);
+    printf("\n");
+
+    // ordenação das palavras em um subarray temporario
+    for (int i = palavras - 1; i >= 0; i--) {
+        k = hash(words[i][coluna]);
+        ordenado[c[index[k]] - 1] = words[i];
+        c[index[k]]--;
+    }
+
+    // copiando a ordem para o array original
+    for (int i = 0; i < palavras; i++)
+        words[i] = ordenado[i];
+        
+    free(ordenado);
 }
 
 
-Celula *pop(Celula *pilha, char **string, int size) {
-    if (pilha == NULL)
-        return pilha;
-
-    Celula *lixo = pilha;
-
-    (*string) = copiarString(lixo->string, size);
-    pilha = lixo->seg;
-    free(lixo);
-
-    return pilha;
+void radixSort(int *index, char **words, int palavras, int size) {
+    for (int j = (size - 1); j >= 0; j--)
+        countingSort(index, words, palavras, j);
 }
 
 
 int main() {
-    Array *array;
-    Celula *pilha = NULL;
-    char string[20];
     int palavras, size, maior;
+    char string[20];
 
     scanf("%d", &palavras);
 
+    // pega a sequencia base para ordenação
+    int *index = lerSequencia();
+
+    // Aloca memória para o array temporário
+    char **temp = (char**)malloc(sizeof(char*) * palavras);
     
     for (int i = 0; i < palavras; i++) {
         scanf("%s", string);
         
         size = stringSize(string);
         if (i == 0 || size > maior) 
-            maior = size;
+        maior = size;
         
         MaiusculaParaMinuscula(string);
         
-        pilha = push(pilha, string, size);
+        temp[i] = copiarString(string, size);
+        printf("%s.\n", temp[i]);
     }
+    
+    printf("%d\n", maior);
+    // Aloca memória para o array definitivo com todas as string com mesmo tamanho
+    char **words = (char**)malloc(sizeof(char*) * palavras);
+    
+    for (int i = 0; i < palavras; i++) { 
+        words[i] = copiarString(temp[i], maior);  
+        free(temp[i]);
+        
+    }
+    free(temp); // libera temp
 
-    array = (Array*)malloc(sizeof(Array) * palavras);
+    radixSort(index, words, palavras, maior);
     
     for (int i = 0; i < palavras; i++) {
-        pilha = pop(pilha, &(array[i].string), maior);
-        
-        puts(array[i].string);
+        puts(words[i]);
+        free(words[i]);
     }
+    free(words);
 
+    
     return 0;
 }
