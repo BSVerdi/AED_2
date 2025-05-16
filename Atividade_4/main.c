@@ -16,6 +16,7 @@ int hash(char letra) {
     return ((letra - 97) % 26) + 1;
 }
 
+
 int *lerSequencia() {
     int *index = (int*)malloc(sizeof(int) * 27);
     int aux;
@@ -65,6 +66,7 @@ int stringSize(char *string) {
 
     return size;
 }
+
 
 void countingSort(int *index, char **words, int palavras, int coluna) {
     int c[27], k;
@@ -151,6 +153,5 @@ int main() {
     }
     free(words);
 
-    
     return 0;
 }
