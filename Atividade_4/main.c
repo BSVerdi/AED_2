@@ -1,5 +1,5 @@
 /*
-    Atividade: Algoritmos de Ordenação Quadráticos
+    Atividade: Algoritmos de Ordenação linear
     Data: 16/5/2025 - UNIFESP
 
     Algoritmos implementados:
