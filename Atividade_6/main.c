@@ -47,7 +47,7 @@ int fatorBalanceamento(No *raiz) {
 }
 
 
-No *rotacaoLL(No *raiz) {
+No *rotacaoLL(No *raiz, int *rotations) {
     No *aux = raiz->esquerda;
     
     raiz->esquerda = aux->direita;
@@ -57,11 +57,13 @@ No *rotacaoLL(No *raiz) {
     atualizarAltura(raiz);
     atualizarAltura(aux);
     
+    (*rotations)++;
+
     return aux;
 }
 
 
-No *rotacaoRR(No *raiz) {
+No *rotacaoRR(No *raiz, int *rotations) {
     No *aux = raiz->direita;
     
     raiz->direita = aux->esquerda;
@@ -69,24 +71,26 @@ No *rotacaoRR(No *raiz) {
     
     atualizarAltura(raiz);
     atualizarAltura(aux);
+
+    (*rotations)++;
     
     return aux;
 }
 
 
-No *rotacaoLR(No *raiz) {
-    raiz->esquerda = rotacaoRR(raiz->esquerda);
-    return rotacaoLL(raiz);
+No *rotacaoLR(No *raiz, int *rotations) {
+    raiz->esquerda = rotacaoRR(raiz->esquerda, rotations);
+    return rotacaoLL(raiz, rotations);
 }
 
 
-No *rotacaoRL(No *raiz) {
-    raiz->direita = rotacaoLL(raiz->direita);
-    return rotacaoRR(raiz);
+No *rotacaoRL(No *raiz, int *rotations) {
+    raiz->direita = rotacaoLL(raiz->direita, rotations);
+    return rotacaoRR(raiz, rotations);
 }
 
 
-No *inserirAVL(No *raiz, int data) {
+No *inserirAVL(No *raiz, int data, int *rotations) {
     if (raiz == NULL) {
         No *novo = (No*)malloc(sizeof(No));
         
@@ -99,9 +103,9 @@ No *inserirAVL(No *raiz, int data) {
     }
     
     if (data < raiz->data)
-        raiz->esquerda = inserirAVL(raiz->esquerda, data);
+        raiz->esquerda = inserirAVL(raiz->esquerda, data, rotations);
     else
-        raiz->direita = inserirAVL(raiz->direita, data);
+        raiz->direita = inserirAVL(raiz->direita, data, rotations);
 
     // atualiza a altura da raiz
     atualizarAltura(raiz);
@@ -110,42 +114,46 @@ No *inserirAVL(No *raiz, int data) {
     int fator = fatorBalanceamento(raiz);
 
     if (fator > 1 && data < (raiz->esquerda)->data)
-        return rotacaoLL(raiz);
+        return rotacaoLL(raiz, rotations);
 
     if (fator > 1 && data > (raiz->esquerda)->data)
-        return rotacaoLR(raiz);
+        return rotacaoLR(raiz, rotations);
 
     if (fator < -1 && data > (raiz->direita)->data)
-        return rotacaoRR(raiz);
+        return rotacaoRR(raiz, rotations);
 
     if (fator < -1 && data < (raiz->direita)->data)
-        return rotacaoRL(raiz);
+        return rotacaoRL(raiz, rotations);
         
     return raiz;
 }
 
 
-No *rotacaoARNLL(No *raiz) {
-    No *aux = raiz->direita;
+No *rotacaoARNRR(No *raiz, int *changes, int *rotations) {
+    No *aux = raiz->esquerda;
 
-    raiz->direita = aux->esquerda;
-    aux->esquerda = raiz;
+    raiz->esquerda = aux->direita;
+    aux->direita = raiz;
 
     aux->cor = raiz->cor;
     raiz->cor = 1;
-
+    
     atualizarAltura(raiz);
     atualizarAltura(aux);
     
+    (*changes) += (aux->cor != raiz->cor) + (raiz->cor != 1);
+    
+    (*rotations)++;
+
     return aux;
 }
 
 
-No *rotacaoARNRR(No *raiz) {
-    No *aux = raiz->esquerda;
-    
-    raiz->esquerda = aux->direita;
-    aux->direita = raiz;
+No *rotacaoARNLL(No *raiz, int *changes, int *rotations) {
+    No *aux = raiz->direita;
+
+    raiz->direita = aux->esquerda;
+    aux->esquerda = raiz;
     
     aux->cor = raiz->cor;
     raiz->cor = 1;
@@ -153,6 +161,10 @@ No *rotacaoARNRR(No *raiz) {
     atualizarAltura(raiz);
     atualizarAltura(aux);
 
+    (*changes) += (aux->cor != raiz->cor) + (raiz->cor != 1);
+
+    (*rotations)++;
+    
     return aux;
 }
 
@@ -165,7 +177,7 @@ int isVermelho(No *raiz) {
 }
 
 
-No *inserirARN(No *raiz, int data) {
+No *inserirARN(No *raiz, int data, int *changes, int *rotations) {
     if (raiz == NULL) {
         No *novo = (No*)malloc(sizeof(No));
         
@@ -179,25 +191,39 @@ No *inserirARN(No *raiz, int data) {
     }
     
     if (data < raiz->data)
-        raiz->esquerda = inserirARN(raiz->esquerda, data);
+        raiz->esquerda = inserirARN(raiz->esquerda, data, changes, rotations);
     else
-        raiz->direita = inserirARN(raiz->direita, data);
+        raiz->direita = inserirARN(raiz->direita, data, changes, rotations);
     
     if (isVermelho(raiz->direita) && !isVermelho(raiz->esquerda))
-        raiz = rotacaoARNLL(raiz);
+        raiz = rotacaoARNLL(raiz, changes, rotations);
     
-    if (isVermelho(raiz->esquerda) && raiz->esquerda != NULL && isVermelho(raiz->esquerda->esquerda))
-        raiz = rotacaoARNRR(raiz);
+    if (isVermelho(raiz->esquerda) && isVermelho(raiz->esquerda->esquerda))
+        raiz = rotacaoARNRR(raiz, changes, rotations);
     
     if (isVermelho(raiz->esquerda) && isVermelho(raiz->direita)) {
         raiz->cor = 1;
         
         raiz->esquerda->cor = 0;
         raiz->direita->cor = 0;
+        (*changes) += 3;
     }
     
     atualizarAltura(raiz);
     return raiz;
+}
+
+
+int alturaNegra(No *raiz) {
+    int count = 0;
+    No *atual = raiz;
+    
+    while (atual != NULL) {
+        if (atual->cor == 0) // Se o nó é preto
+            count++;
+        atual = atual->esquerda;
+    }
+    return count;
 }
 
 
@@ -210,17 +236,8 @@ void liberarArvore(No *raiz) {
 }
 
 
-void imprimirPreOrdem(No *raiz) {
-    if (raiz != NULL) {
-        printf("No %d | Altura: %d | Cor: %s\n", raiz->data, raiz->altura, raiz->cor ? "Vermelho" : "Preto");
-        imprimirPreOrdem(raiz->esquerda);
-        imprimirPreOrdem(raiz->direita);
-    }
-}
-
-
 int main() {
-    int num;
+    int num, changes = 0, rotationsAVL = 0, rotationsARN = 0;
     No *avl = NULL;
     No *arn = NULL;
 
@@ -228,11 +245,14 @@ int main() {
         scanf("%d", &num);
 
         if (num >= 0) {
-            avl = inserirAVL(avl, num);
+            avl = inserirAVL(avl, num, &rotationsAVL);
 
-            arn = inserirARN(arn, num);
-            if (arn != NULL)
+            arn = inserirARN(arn, num, &changes, &rotationsARN);
+
+            if (arn != NULL && arn->cor == 1) {
                 arn->cor = 0;
+                changes++;
+            }
         } else break;
     }
 
@@ -241,10 +261,11 @@ int main() {
 
     printf("%d, %d, %d\n", alturaMax(altura(arn->esquerda), altura(arn->direita)), altura(arn->esquerda), altura(arn->direita));
 
-    printf("\n--- Arvore ARN ---\n");
-    imprimirPreOrdem(arn);
+    // print da altura negra
+    printf("%d\n", alturaNegra(arn));
 
-    printf("%d", arn->data);
+    // print das mudanças de cores e rotações
+    printf("%d, %d, %d", changes, rotationsARN, rotationsAVL);
 
     liberarArvore(avl);
     liberarArvore(arn);
