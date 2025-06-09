@@ -1,3 +1,12 @@
+/*
+    Atividade: Algoritmos de balanceamento de arvores binarias de busca
+    Data: 09/06/2025 - UNIFESP
+    Aluno: Breno Silveira Signorini Verdi
+
+    Algoritmos implementados:
+    - Remoçâo em arvores rubro negras
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 
@@ -145,7 +154,7 @@ No *inserir(No *raiz, int data) {
     return raiz;
 }
 
-
+// funçâo para corrigir a arvore apos alguma remoção
 No *corrigirR(No *raiz, No *aux, No *aux_pai) {
     while (aux != raiz && (aux == NULL || aux->color == 0)) {
         if (aux == aux_pai->esquerda) {
@@ -235,7 +244,7 @@ No *corrigirR(No *raiz, No *aux, No *aux_pai) {
     return raiz;
 }
 
-
+// função para buscar valor na arvore
 No *buscar(No *raiz, int data) {
     if (raiz != NULL) {
         if (data == raiz->data)
@@ -250,7 +259,7 @@ No *buscar(No *raiz, int data) {
     return NULL;
 }
 
-
+// função para achar o sucessor
 No *sucessor(No * raiz) {
     if (raiz->esquerda != NULL)
         return sucessor(raiz->esquerda);
@@ -258,7 +267,7 @@ No *sucessor(No * raiz) {
     return raiz;
 }
 
-
+// função para fazer a troca de nos na arvore
 No *swap(No *raiz, No *no1, No *no2) {
     if (no1->pai == NULL)
         raiz = no2;
@@ -295,7 +304,7 @@ No *remover(No *raiz, int data) {
 
         raiz = swap(raiz, lixo, lixo->esquerda);
     } else {
-        temp = sucessor(raiz->direita);
+        temp = sucessor(lixo->direita);
         cor = temp->color;
         aux = temp->direita;
 
@@ -333,6 +342,41 @@ No *remover(No *raiz, int data) {
     return raiz;
 }
 
+// função para achar a altura de cada nó
+int altura(No *raiz) {
+    if (raiz == NULL)
+        return -1;
+
+    int esquerda = altura(raiz->esquerda);
+    int direita = altura(raiz->direita);
+
+    if (esquerda > direita)
+        return esquerda + 1;
+    else
+        return direita + 1;
+}
+
+
+int alturaVermelha(No *raiz) {
+    if (raiz == NULL)
+        return -1;
+
+    int esquerda = alturaVermelha(raiz->esquerda);
+    int direita = alturaVermelha(raiz->direita);
+
+    int maxFilhos = esquerda > direita ? esquerda : direita;
+
+    if (raiz->color == 1)
+        return maxFilhos + 1;
+    else
+        return maxFilhos;
+}
+
+
+void printAltura(No *raiz) {
+    printf("%d, %d, %d\n", altura(raiz), (altura(raiz->esquerda) + 1), (altura(raiz->direita) + 1));
+}
+
 
 int main() {
     int num;
@@ -342,11 +386,34 @@ int main() {
         scanf("%d", &num);
 
         if (num >= 0)
-            raiz = inserir(raiz ,num);
+        raiz = inserir(raiz ,num);
         else break;
     }
+    
+    printAltura(raiz);
 
-    printf("%d", raiz->data); //debug
+    while (1) {
+        scanf("%d", &num);
+
+        if (num >= 0) {
+            No *temp = buscar(raiz, num);
+
+            if (temp) {
+                printAltura(temp);
+
+                raiz = remover(raiz, num);
+            } else raiz = inserir(raiz, num);
+        } else break;
+    }
+    
+    scanf("%d", &num);
+    
+    No *temp = buscar(raiz, num);
+
+    if (temp)
+        printf("%d", alturaVermelha(temp) + 1);
+    else
+        printf("Valor nao encontrado");
 
     return 0;
 }
